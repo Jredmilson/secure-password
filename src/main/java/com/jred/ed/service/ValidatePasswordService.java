@@ -1,9 +1,9 @@
 package com.jred.ed.service;
 
+import com.jred.ed.model.PasswordResponseDTO;
 import org.springframework.stereotype.Service;
 
-@Service
 public interface ValidatePasswordService {
 
-    Boolean authenticatePassword(String password);
+    PasswordResponseDTO authenticatePassword(String password);
 }
