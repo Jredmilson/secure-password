@@ -1,15 +1,17 @@
 package com.jred.ed.service.imp;
 
 
+import com.jred.ed.PasswordException.PasswordException;
 import com.jred.ed.model.Password;
 import com.jred.ed.model.PasswordResponseDTO;
 import com.jred.ed.service.ValidatePasswordService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class ValidatePasswordServiceImp implements ValidatePasswordService {
@@ -18,24 +20,23 @@ public class ValidatePasswordServiceImp implements ValidatePasswordService {
     @Override
     public PasswordResponseDTO authenticatePassword(String password) {
 
-        boolean maisculo = validaMaisculo(password);
-        boolean minusculo = validaMinusculo(password);
-        boolean numerico = validaNumero(password);
-        boolean caracter = validaCaracter(password);
-        boolean tamanho = validaTamanho(password);
+        Map<String, Boolean> stringMap = new LinkedHashMap<>();
 
-        List<String> passwordList = new ArrayList<>();
+        stringMap.put(Password.MAISCULO.getNome(), validaMaisculo(password));
+        stringMap.put(Password.MINUSCULO.getNome(), validaMinusculo(password));
+        stringMap.put(Password.NUMERICO.getNome(), validaNumero(password));
+        stringMap.put(Password.TAMANHO.getNome(), validaTamanho(password));
+        stringMap.put(Password.CARACTER_ESPECIAL.getNome(), validaCaracter(password));
 
-        if (!maisculo) passwordList.add(Password.MAISCULO.getNome());
-        if (!minusculo) passwordList.add(Password.MINUSCULO.getNome());
-        if (!numerico) passwordList.add(Password.NUMERICO.getNome());
-        if (!caracter) passwordList.add(Password.CARACTER_ESPECIAL.getNome());
-        if (!tamanho) passwordList.add(Password.TAMANHO.getNome());
+        List<String> test = stringMap.entrySet().stream()
+                .filter(pass -> !pass.getValue())
+                .map(Map.Entry::getKey)
+                .toList();
 
-        if (!passwordList.isEmpty()) {
+        if (!test.isEmpty()) {
             return PasswordResponseDTO.builder()
                     .error("INVALID_PASSWORD")
-                    .details(format(passwordList))
+                    .details(format(test))
                     .statusCode(String.valueOf(HttpStatus.BAD_REQUEST))
                     .build();
         }
@@ -62,7 +63,7 @@ public class ValidatePasswordServiceImp implements ValidatePasswordService {
     }
 
     private boolean validaCaracter(String password) {
-        return password.chars().anyMatch(ch -> "!@#$%^&*()_+".indexOf(ch) >= 0);
+        return password.chars().anyMatch(ch -> ".,!@#$%".indexOf(ch) >= 0);
     }
 
     private String format(List<String> acceptances) {
